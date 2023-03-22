@@ -1,7 +1,11 @@
-const userRoutes = require('./user')
+const userRoutes = require('./user');
+const { notFound, errorHandler } = require('../middlewares/errorHandler');
 
 const initRoutes = (app) => {
-    app.use('/api/user', userRoutes)
-}
+    app.use('/api/user', userRoutes);
 
-module.exports = initRoutes
+    app.use(notFound);
+    app.use(errorHandler);
+};
+
+module.exports = initRoutes;

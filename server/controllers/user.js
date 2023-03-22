@@ -11,7 +11,7 @@ const register = asyncHandler(async(req, res)=> {
     }
     const user = await User.create(req.body)
         res.status(201).json({
-            success: user? true : false,
+            success: user ? true : false,
             message: 'User created successfully',
             user
         })
@@ -19,7 +19,7 @@ const register = asyncHandler(async(req, res)=> {
 
 const login = asyncHandler(async(req, res) => {
     const { email, password } = req.body;
-    if (!email ||!password) {
+    if (!email || !password) {
         res.status(400).json({
             success: false,
             message: 'Please enter all fields'
