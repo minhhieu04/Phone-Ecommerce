@@ -1,5 +1,6 @@
 const User = require('../models/user');
 const asyncHandler = require('express-async-handler');
+const { findOne } = require('../models/user');
 
 const register = asyncHandler(async(req, res)=> {
     const { firstName, lastName, email, password } = req.body;
@@ -9,12 +10,16 @@ const register = asyncHandler(async(req, res)=> {
             message: 'Please enter all fields'
          });
     }
-    const user = await User.create(req.body)
+    const user = await User.findOne({email})
+    if (user) throw new Error('User has existed')
+    else {
+        const newUser = await User.create(req.body)
         res.status(201).json({
             success: user ? true : false,
-            message: 'User created successfully',
-            user
+            message: user ? 'User created successfully. Please go login' : 'Something went wrong',
+            user: newUser
         })
+    }
 })
 
 const login = asyncHandler(async(req, res) => {
@@ -24,10 +29,23 @@ const login = asyncHandler(async(req, res) => {
             success: false,
             message: 'Please enter all fields'
         });
-        return;
+    };
+    const user = await User.findOne({email});
+    const isCorrectPassword = await user.comparePassword(password);
+    if (user && isCorrectPassword) {
+        const { password, role, ...others } = user.toObject();
+        return res.status(200).json({
+            success: true,
+            statusCode: res.statusCode,
+            // token: user.generateAuthToken(),
+            userData: others
+        })
+    } else {
+        throw new Error('Invalid credentials!');
     }
 });
 
 module.exports = {
-    register
+    register,
+    login
 }

@@ -57,11 +57,18 @@ var userSchema = new mongoose.Schema({
     },
 }, { timeseries: true });
 
+// Hash password
 userSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();
     const salt = bcrypt.genSaltSync(10);
     this.password = hashPassword = await bcrypt.hashSync(this.password, salt);
 });
+
+// Compare password
+
+userSchema.methods.comparePassword = async function (password) {
+    return await bcrypt.compareSync(password, this.password);
+};
 
 //Export the model
 module.exports = mongoose.model('User', userSchema);
