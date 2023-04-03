@@ -2,6 +2,8 @@ const User = require('../models/user');
 const asyncHandler = require('express-async-handler');
 const { findOne } = require('../models/user');
 const { generateRefreshToken, generateAccessToken } = require('../middlewares/jwt')
+const jwt = require('jsonwebtoken');
+const { response } = require('express');
 
 const register = asyncHandler(async(req, res)=> {
     const { firstName, lastName, email, password } = req.body;
@@ -59,10 +61,47 @@ const getCurrentUser = asyncHandler(async(req, res) => {
         });
     })
     
-})
+});
+
+const refreshToken = asyncHandler(async (req, res) => {
+    const cookie = req.cookies;
+    if (!cookie && !cookie.refreshToken) throw new Error('No refresh token in session');
+    const result = await jwt.verify(cookie.refreshToken, process.env.JWT_REFRESH_SECRET);
+    const response = await User.findOne({_id: result._id, roles: result._roles});
+        return res.status(200).json({
+            success: response ? true : false,
+            newAccessToken: response ? generateAccessToken(response._id, response.roles) : 'Refresh token not matched'
+        });
+    // const result = await jwt.verify(cookie.refreshToken, process.env.JWT_REFRESH_SECRET, async (err, decode) => {
+    //     if (err) throw new Error('Invalid refresh token');
+    //     const result = await User.findOne({_id: decode._id, roles: decode._roles});
+    //     return res.status(200).json({
+    //         success: result ? true : false,
+    //         newAccessToken: result ? generateAccessToken(result._id, result.roles) : 'Refresh token not matched'
+    //     });
+    // });
+});
+
+const logout = asyncHandler(async(req, res) => {
+    const cookie = req.cookies;
+    if (!cookie && !cookie.refreshToken) throw new Error('No refresh token in cookie');
+    // Xoá trong db
+    await User.findOneAndUpdate({ refreshToken: cookie.refreshToken }, { refreshToken: ''}, { new: true});
+    // XOá trong cookie
+    res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: true,
+    });
+    return res.status(200).json({
+        success: true,
+        message: 'Logout successfully'
+    })
+});
 
 module.exports = {
     register,
     login,
-    getCurrentUser
+    getCurrentUser,
+    refreshToken,
+    logout
 }

@@ -5,6 +5,10 @@ const { verifyAccessToken } = require('../middlewares/verifyToken')
 route.post('/register', userController.register)
 route.post('/login', userController.login)
 route.get('/get-profile', verifyAccessToken, userController.getCurrentUser)
+route.post('/refreshtoken', userController.refreshToken)
+route.get('/logout', verifyAccessToken, userController.logout)
+
+
 
 
 module.exports = route
