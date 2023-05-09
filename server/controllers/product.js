@@ -1,3 +1,4 @@
+const { response } = require("express");
 const Product = require("../models/product");
 const asyncHandler = require("express-async-handler");
 const slugify = require("slugify");
@@ -22,12 +23,54 @@ const getProduct = asyncHandler(async (req, res) => {
   });
 });
 
-const getsProduct = asyncHandler(async (req, res) => {
-  const products = await Product.find();
-  return res.status(200).json({
-    success: products ? true : false,
-    productData: products ? products : "Cannot find products",
-  });
+//Filtering, sorting and pagination
+// Code tham khảo: https://jeffdevslife.com/p/1-mongodb-query-of-advanced-filtering-sorting-limit-field-and-pagination-with-mongoose/
+const getProducts = asyncHandler(async (req, res) => {
+  const queries = { ...req.query };
+  // Tách các trường đặc biệt ra khỏi query
+  const excludeFields = ["limit", "sort", "page", "fields"];
+  excludeFields.forEach((el) => delete queries[el]);
+
+  // Format lại các operators cho đúng cú pháp của mongoose
+  let queryString = JSON.stringify(queries);
+  queryString = queryString.replace(
+    /\b(gte|gt|lt|lte)\b/g,
+    (matchedElement) => `$${matchedElement}`
+  );
+  const formatQueries = JSON.parse(queryString);
+
+  // Filtering
+  if (queries?.title)
+    formatQueries.title = { $regex: queries.title, $options: "i" };
+  let queryCommand = Product.find(formatQueries);
+
+  // Sortings
+  if (req.query.sort) {
+    const sortBy = req.query.sort.split(",").join(" ");
+    queryCommand = queryCommand.sort(sortBy);
+  }
+
+  // Execute the query
+  queryCommand
+    .then(async (response) => {
+      const counts = await Product.find(formatQueries).countDocuments();
+      return res.status(200).json({
+        success: response ? true : false,
+        counts,
+        products: response ? response : "Cannot find products",
+      });
+    })
+    .catch((err) => {
+      throw new Error(err.message);
+    });
+  // queryCommand.exec(async (err, response) => {
+  //   if (err) throw new Error(err.message);
+  //   return res.status(200).json({
+  //     success: response ? true : false,
+  //     products: response ? response : "Cannot find products",
+  //     counts,
+  //   });
+  // });
 });
 
 const updateProduct = asyncHandler(async (req, res) => {
@@ -54,7 +97,7 @@ const delProduct = asyncHandler(async (req, res) => {
 module.exports = {
   createProduct,
   getProduct,
-  getsProduct,
+  getProducts,
   updateProduct,
   delProduct,
 };

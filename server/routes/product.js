@@ -7,8 +7,8 @@ router.post(
   [verifyAccessToken, isAdmin],
   productController.createProduct
 );
-
-router.get("/", productController.getsProduct);
+// [GET] product/?<fieldName>[gt || gte || lte || lt ]?sort
+router.get("/", productController.getProducts);
 
 router.get("/:pid", productController.getProduct);
 
