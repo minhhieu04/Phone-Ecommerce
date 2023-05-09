@@ -9,6 +9,7 @@ router.post(
 );
 // [GET] product/?<fieldName>[gt || gte || lte || lt ]?sort
 router.get("/", productController.getProducts);
+router.put("/ratings", verifyAccessToken, productController.ratings);
 
 router.get("/:pid", productController.getProduct);
 

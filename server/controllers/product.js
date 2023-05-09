@@ -44,11 +44,23 @@ const getProducts = asyncHandler(async (req, res) => {
     formatQueries.title = { $regex: queries.title, $options: "i" };
   let queryCommand = Product.find(formatQueries);
 
-  // Sortings
+  // Sorting
   if (req.query.sort) {
     const sortBy = req.query.sort.split(",").join(" ");
     queryCommand = queryCommand.sort(sortBy);
   }
+
+  // Fields limiting
+  if (req.query.fields) {
+    const fields = req.query.fields.split(",").join(" ");
+    queryCommand = queryCommand.select(fields);
+  }
+
+  // Pagination
+  const page = +req.query.page || 1;
+  const limit = +req.query.limit || 10;
+  const skip = (page - 1) * limit;
+  queryCommand.skip(skip).limit(limit);
 
   // Execute the query
   queryCommand
@@ -94,10 +106,55 @@ const delProduct = asyncHandler(async (req, res) => {
   });
 });
 
+const ratings = asyncHandler(async (req, res) => {
+  const { _id } = req.user;
+  const { star, comment, pid } = req.body;
+  if (!star || !comment || !pid) throw new Error("Missing inputs");
+  const ratingProduct = await Product.findById(pid);
+  // Check có được đánh giá hay không
+  const alreadyRating = ratingProduct?.ratings.find(
+    (el) => el.postedBy.toString() === _id
+  );
+  if (alreadyRating) {
+    // Update rating
+    await Product.updateOne(
+      {
+        ratings: { $elemMatch: alreadyRating },
+      },
+      { $set: { "ratings.$.star": star, "ratings.$.comment": comment } },
+      { new: true }
+    );
+  } else {
+    // Add rating
+    await Product.findByIdAndUpdate(
+      pid,
+      {
+        $push: { ratings: { star, comment, postedBy: _id } },
+      },
+      { new: true }
+    );
+  }
+
+  // Sum rating
+  const updateProduct = await Product.findById(pid);
+  const countRatings = updateProduct.ratings.length;
+  const sumRatings = updateProduct.ratings.reduce(
+    (sum, rating) => (sum += rating.star),
+    0
+  );
+  updateProduct.totalRatings = (sumRatings / countRatings).toFixed(1);
+  await updateProduct.save();
+
+  return res.status(200).json({
+    status: true,
+  });
+});
+
 module.exports = {
   createProduct,
   getProduct,
   getProducts,
   updateProduct,
   delProduct,
+  ratings,
 };
