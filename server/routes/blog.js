@@ -4,9 +4,13 @@ const { verifyAccessToken, isAdmin } = require("../middlewares/verifyToken");
 
 router.post("/", [verifyAccessToken, isAdmin], blogController.createNewBlog);
 
+router.get("/get-one/:bid", blogController.getBlog);
+
 router.get("/get-all", blogController.getAllBlogs);
 
-router.put("/like", verifyAccessToken, blogController.likeBlog);
+router.put("/like/:bid", verifyAccessToken, blogController.likeBlog);
+
+router.put("/dislike/:bid", verifyAccessToken, blogController.dislikeBlog);
 
 router.patch(
   "/update/:bid",

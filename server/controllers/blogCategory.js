@@ -30,7 +30,7 @@ const updateCategory = asyncHandler(async (req, res) => {
 
 const deleteCategory = asyncHandler(async (req, res) => {
   const { pcid } = req.params;
-  const response = await BlogCategory.findOneAndDelete(pcid);
+  const response = await BlogCategory.findByIdAndDelete(pcid);
   res.status(200).json({
     success: response ? true : false,
     deleteCategory: response
