@@ -1,4 +1,3 @@
-const { response } = require("express");
 const Blog = require("../models/blog");
 const asyncHandler = require("express-async-handler");
 
@@ -158,6 +157,20 @@ const dislikeBlog = asyncHandler(async (req, res) => {
   }
 });
 
+const uploadImageBlog = asyncHandler(async (req, res) => {
+  const { bid } = req.params;
+  if (!req.file) throw new Error("Missing file");
+  const response = await Blog.findByIdAndUpdate(
+    bid,
+    { image: req.file.path },
+    { new: true }
+  );
+  return res.status(200).json({
+    status: response ? true : false,
+    updatedBlog: response ? response : "Cannot update blog",
+  });
+});
+
 module.exports = {
   createNewBlog,
   getBlog,
@@ -166,4 +179,5 @@ module.exports = {
   deleteBlog,
   likeBlog,
   dislikeBlog,
+  uploadImageBlog,
 };

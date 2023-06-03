@@ -150,6 +150,24 @@ const ratings = asyncHandler(async (req, res) => {
   });
 });
 
+const uploadImagesProduct = asyncHandler(async (req, res) => {
+  const { pid } = req.params;
+  if (!req.files) throw new Error("Missing files");
+  const imageUrls = req.files.map((file) => file.path);
+  console.log(imageUrls);
+  const response = await Product.findByIdAndUpdate(
+    pid,
+    {
+      $push: { images: { $each: imageUrls } },
+    },
+    { new: true }
+  );
+  return res.status(200).json({
+    status: response ? true : false,
+    updatedProduct: response ? response : "Cannot update product",
+  });
+});
+
 module.exports = {
   createProduct,
   getProduct,
@@ -157,4 +175,5 @@ module.exports = {
   updateProduct,
   delProduct,
   ratings,
+  uploadImagesProduct,
 };
