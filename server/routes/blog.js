@@ -1,3 +1,10 @@
+/**
+ * @Swagger
+ * components:
+ *  schemas:
+ *
+ */
+
 const router = require("express").Router();
 const blogController = require("../controllers/blog");
 const { verifyAccessToken, isAdmin } = require("../middlewares/verifyToken");

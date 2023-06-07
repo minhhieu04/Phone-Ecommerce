@@ -4,8 +4,7 @@ const orderSchema = new mongoose.Schema(
   {
     products: [
       {
-        type: mongoose.Types.ObjectId,
-        ref: "Product",
+        product: { type: mongoose.Types.ObjectId, ref: "Product" },
         count: Number,
         color: String,
       },
@@ -13,9 +12,13 @@ const orderSchema = new mongoose.Schema(
     status: {
       type: String,
       default: "Processing",
-      enum: ["Cancelled", "Processing", "Processed"],
+      enum: ["Cancelled", "Processing", "Succeeded"],
     },
-    paymentIntent: {},
+    total: Number,
+    coupon: {
+      type: mongoose.Types.ObjectId,
+      ref: "Coupon",
+    },
     orderBy: {
       type: mongoose.Types.ObjectId,
       ref: "User",
