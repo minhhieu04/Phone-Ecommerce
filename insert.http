@@ -1,0 +1,5 @@
+###
+POST http://localhost:8888/api/insert/product
+
+###
+POST  http://localhost:8888/api/insert/cate
